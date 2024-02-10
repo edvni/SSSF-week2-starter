@@ -9,26 +9,21 @@ const catSchema = new mongoose.Schema<Cat>({
   },
   weight: {
     type: Number,
-    required: true,
   },
   filename: {
     type: String,
-    required: true,
   },
   birthdate: {
     type: Date,
-    required: true,
     max: Date.now(),
   },
   location: {
     type: {
       type: String,
       enum: ['Point'],
-      required: true,
     },
     coordinates: {
       type: [Number],
-      required: true,
     },
   },
   owner: {
