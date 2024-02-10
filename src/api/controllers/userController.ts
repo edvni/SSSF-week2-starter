@@ -1,6 +1,5 @@
 import {NextFunction, Request, Response} from 'express';
 import {UserOutput, User} from '../../types/DBTypes';
-import {MessageResponse} from '../../types/MessageTypes';
 import userModel from '../models/userModel';
 import bcrypt from 'bcryptjs';
 import CustomError from '../../classes/CustomError';
@@ -18,7 +17,7 @@ const userListGet = async (
   next: NextFunction
 ) => {
   try {
-    const users = await userModel.find();
+    const users = await userModel.find().select('-password -role');
     res.json(users);
   } catch (error) {
     next(error);
@@ -27,7 +26,7 @@ const userListGet = async (
 
 const userPost = async (
   req: Request<{}, {}, User>,
-  res: Response<MessageResponse>,
+  res: Response,
   next: NextFunction
 ) => {
   try {
@@ -41,8 +40,12 @@ const userPost = async (
     };
 
     const user = await userModel.create(userInput);
-    console.log(user);
-    res.status(201).json({message: 'User created'});
+    const userOutput: UserOutput = {
+      _id: user._id,
+      user_name: user.user_name,
+      email: user.email,
+    };
+    res.status(200).json({message: 'User created', data: userOutput});
   } catch (error) {
     next(error);
   }
@@ -50,74 +53,78 @@ const userPost = async (
 
 const userGet = async (
   req: Request<{id: string}>,
-  res: Response<User>,
+  res: Response<UserOutput>,
   next: NextFunction
 ) => {
   try {
-    const userId = req.params.id;
-    const user = await userModel.findById(userId);
-
+    const user = await userModel
+      .findById(req.params.id)
+      .select('-password -role');
     if (!user) {
       throw new CustomError('User not found', 404);
     }
+    console.log(user);
     res.json(user);
   } catch (error) {
     next(error);
   }
 };
 
+// prettier-ignore
 const userPutCurrent = async (
-  req: Request<{id: string}, {}, Omit<User, '_id'>>,
+  req: Request<{}, {}, Omit<User, '_id'>>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const user = await userModel.findByIdAndUpdate(req.params.id, req.body, {
+    const id = (res.locals.user as User)._id;
+    const user = await userModel.findByIdAndUpdate(id, req.body, {
       new: true,
-    });
+    }).select('-password -role');
     if (!user) {
       throw new CustomError('User not found', 404);
     }
-    res.json({message: 'User updated', _id: user._id});
+    res.json({message: 'User updated', data: user as UserOutput});
   } catch (error) {
     next(error);
   }
 };
 
 const userDeleteCurrent = async (
-  req: Request<{id: string}>,
-  res: Response<{message: string}>,
+  req: Request,
+  res: Response,
   next: NextFunction
 ) => {
   try {
-    const userId = req.params.id;
-    const user = await userModel.findByIdAndDelete(userId);
+    const user = (await userModel.findByIdAndDelete(
+      res.locals.user._id
+    )) as unknown as User;
 
     if (!user) {
       throw new CustomError('User not found', 404);
     }
+    const userOutput: UserOutput = {
+      _id: user._id,
+      user_name: user.user_name,
+      email: user.email,
+    };
 
-    res.json({message: 'User deleted successfully'});
+    res.json({message: 'User deleted successfully', data: userOutput});
   } catch (error) {
     next(error);
   }
 };
 
-const checkToken = (
-  _req: Request,
-  res: Response<UserOutput>,
-  next: NextFunction
-) => {
-  try {
-    const userData = res.locals.user;
-
-    if (!userData) {
-      throw new CustomError('Unauthorized access', 401);
-    }
-
-    res.json(userData);
-  } catch (error) {
-    next(error);
+const checkToken = (req: Request, res: Response, next: NextFunction) => {
+  if (!res.locals.user) {
+    next(new CustomError('token not valid', 403));
+  } else {
+    const userOutput: UserOutput = {
+      _id: (res.locals.user as User)._id,
+      email: (res.locals.user as User).email,
+      user_name: (res.locals.user as User).user_name,
+    };
+    res.json(userOutput);
   }
 };
 
