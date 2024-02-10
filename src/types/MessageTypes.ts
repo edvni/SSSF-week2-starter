@@ -1,4 +1,3 @@
-import {Types} from 'mongoose';
 import {UserOutput} from './DBTypes';
 
 type MessageResponse = {
@@ -14,18 +13,8 @@ type LoginResponse = {
   user: UserOutput;
 };
 
-type PostMessage = MessageResponse & {
-  _id: Types.ObjectId;
-};
-
 type UploadResponse = MessageResponse & {
   id: number;
 };
 
-export {
-  MessageResponse,
-  ErrorResponse,
-  LoginResponse,
-  UploadResponse,
-  PostMessage,
-};
+export {MessageResponse, ErrorResponse, LoginResponse, UploadResponse};
