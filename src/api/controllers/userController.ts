@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from 'express';
-import {UserOutput, User, LoginUser} from '../../types/DBTypes';
-import {MessageResponse, PostMessage} from '../../types/MessageTypes';
+import {UserOutput, User} from '../../types/DBTypes';
+import {MessageResponse} from '../../types/MessageTypes';
 import userModel from '../models/userModel';
 import bcrypt from 'bcryptjs';
 import CustomError from '../../classes/CustomError';
@@ -68,7 +68,7 @@ const userGet = async (
 
 const userPutCurrent = async (
   req: Request<{id: string}, {}, Omit<User, '_id'>>,
-  res: Response<PostMessage>,
+  res: Response,
   next: NextFunction
 ) => {
   try {
