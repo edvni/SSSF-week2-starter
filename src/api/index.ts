@@ -1,14 +1,15 @@
-import express, {Request, Response} from 'express';
+import express from 'express';
 import userRoute from './routes/userRoute';
 import catRoute from './routes/catRoute';
 import authRoute from './routes/authRoute';
 import passport from 'passport';
+import {MessageResponse} from '../types/MessageTypes';
 
 const router = express.Router();
 
 router.use(passport.initialize());
 
-router.get('/', (req: Request, res: Response) => {
+router.get<{}, MessageResponse>('/', (req, res) => {
   res.json({
     message: 'routes: auth, user, cat',
   });
