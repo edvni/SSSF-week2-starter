@@ -28,10 +28,9 @@ const catListGet = async (
       .populate({
         path: 'location',
       });
-    console.log(cats);
     res.json(cats);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -66,8 +65,8 @@ const catPost = async (
     req.body.owner = res.locals.user._id;
     const cat = await CatModel.create(req.body);
     res.status(200).json({message: 'Cat created', data: cat});
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -88,8 +87,8 @@ const catPut = async (
       throw new CustomError('Cat not found', 404);
     }
     res.json({message: 'Cat updated', data: cat});
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -108,8 +107,8 @@ const catDelete = async (
       throw new CustomError('Cat not found or not your cat', 404);
     }
     res.json({message: 'Cat deleted', data: cat});
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -120,7 +119,7 @@ const catDeleteAdmin = async (
 ) => {
   try {
     if (res.locals.user.role !== 'admin') {
-      throw new CustomError('Access denied not admin.', 404);
+      throw new CustomError('Access denied, not admin.', 404);
     }
     const cat = (await CatModel.findByIdAndDelete(
       req.params.id
@@ -152,13 +151,13 @@ const catPutAdmin = async (
       throw new CustomError('Cat not found', 404);
     }
     res.json({message: 'Cat updated', data: cat});
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
 const catGetByUser = async (
-  req: Request<{}, {}, User>,
+  req: Request,
   res: Response<Cat[]>,
   next: NextFunction
 ) => {
@@ -168,8 +167,8 @@ const catGetByUser = async (
       select: '-__v -password -role',
     });
     res.json(cats);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -179,37 +178,11 @@ const catGetByBoundingBox = async (
   next: NextFunction
 ) => {
   try {
-    const {topRight, bottomLeft} = req.query;
-
-    if (!topRight || !bottomLeft) {
-      throw new Error('Missing bounding box coordinates');
-    }
-
-    const [rightCorner1, rightCorner2] = topRight.split(',').map(Number);
-    const [leftCorner1, leftCorner2] = bottomLeft.split(',').map(Number);
-
-    // Construct the bounding box coordinates in GeoJSON format
-    const bounds = {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [Number(rightCorner1), Number(rightCorner2)],
-          [Number(leftCorner1), Number(rightCorner2)],
-          [Number(leftCorner1), Number(leftCorner2)],
-          [Number(rightCorner1), Number(leftCorner2)],
-          [Number(rightCorner1), Number(rightCorner2)], // Closing coordinate
-        ],
-      ],
-    };
-    /*
-    // extract topRight and bottomLeft coordinates from request query
     const topRight = req.query.topRight;
     const bottomLeft = req.query.bottomLeft;
-    // Split coordinates into latitude and longitude components
     const [rightCorner1, rightCorner2] = topRight.split(',');
     const [leftCorner1, leftCorner2] = bottomLeft.split(',');
 
-    // Create bounds object for the bounding box
     const bounds = rectangleBounds(
       {
         lat: Number(rightCorner1),
@@ -220,8 +193,6 @@ const catGetByBoundingBox = async (
         lng: Number(leftCorner2),
       }
     );
-    */
-    // Find cats within the specified bounding box
     const cats = await CatModel.find({
       location: {
         $geoWithin: {
@@ -231,8 +202,8 @@ const catGetByBoundingBox = async (
     }).select('-__v');
     // Send the array of cats as a JSON response
     res.json(cats);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 

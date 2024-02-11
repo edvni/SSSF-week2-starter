@@ -9,13 +9,14 @@ const catSchema = new mongoose.Schema<Cat>({
   },
   weight: {
     type: Number,
+    required: true,
   },
   filename: {
     type: String,
   },
   birthdate: {
     type: Date,
-    max: Date.now(),
+    required: true,
   },
   location: {
     type: {

@@ -5,8 +5,9 @@ import {ExifImage} from 'exif';
 import {ErrorResponse} from './types/MessageTypes';
 import CustomError from './classes/CustomError';
 import jwt from 'jsonwebtoken';
-import {UserOutput} from './types/DBTypes';
+import {LoginUser, UserOutput} from './types/DBTypes';
 import userModel from './api/models/userModel';
+import {validationResult} from 'express-validator';
 
 // convert GPS coordinates to decimal format
 // for longitude, send exifData.gps.GPSLongitude, exifData.gps.GPSLongitudeRef
@@ -75,6 +76,19 @@ const getCoordinates = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const validationErrors = (req: Request, _res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const messages: string = errors
+      .array()
+      .map((error) => `${error.msg}: ${error.param}`)
+      .join(', ');
+    next(new CustomError(messages, 400));
+    return;
+  }
+  next();
+};
+
 const makeThumbnail = async (
   req: Request,
   res: Response,
@@ -113,7 +127,7 @@ const authenticate = async (
     const tokenContent = jwt.verify(
       token,
       process.env.JWT_SECRET as string
-    ) as UserOutput;
+    ) as LoginUser;
 
     // check if user exists in database (optional)
     // const user = await userModel.findById(tokenContent._id);
@@ -132,4 +146,11 @@ const authenticate = async (
   }
 };
 
-export {notFound, errorHandler, getCoordinates, makeThumbnail, authenticate};
+export {
+  notFound,
+  errorHandler,
+  getCoordinates,
+  makeThumbnail,
+  authenticate,
+  validationErrors,
+};

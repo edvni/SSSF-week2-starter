@@ -7,14 +7,21 @@ import {
   userPost,
   userPutCurrent,
 } from '../controllers/userController';
-import {authenticate} from '../../middlewares';
+import {authenticate, validationErrors} from '../../middlewares';
+import {body} from 'express-validator';
 
 const router = express.Router();
 
 router
   .route('/')
   .get(userListGet)
-  .post(userPost)
+  .post(
+    body('user_name').isString().isLength({min: 3}),
+    body('email').isString().isEmail(),
+    body('password').isString().isLength({min: 4}),
+    validationErrors,
+    userPost
+  )
   .put(authenticate, userPutCurrent)
   .delete(authenticate, userDeleteCurrent);
 

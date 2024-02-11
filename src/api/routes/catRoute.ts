@@ -12,7 +12,12 @@ import {
 } from '../controllers/catController';
 import multer, {FileFilterCallback} from 'multer';
 import {body, param, query} from 'express-validator';
-import {authenticate, getCoordinates, makeThumbnail} from '../../middlewares';
+import {
+  authenticate,
+  getCoordinates,
+  makeThumbnail,
+  validationErrors,
+} from '../../middlewares';
 
 const fileFilter = (
   request: Request,
@@ -39,6 +44,7 @@ router
     body('cat_name').notEmpty().escape(),
     body('birthdate').isDate(),
     body('weight').isNumeric(),
+    validationErrors,
     catPost
   );
 
@@ -47,6 +53,7 @@ router
   .get(
     query('topRight').notEmpty(),
     query('bottomLeft').notEmpty(),
+    validationErrors,
     catGetByBoundingBox
   );
 
